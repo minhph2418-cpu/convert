@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đổi định dạng file</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f6;--card:#fff;--ink:#16203a;--mut:#5d6b86;--line:#d3dae8;--acc:#1f5eff;--onacc:#fff;--ok:#0a7d5a;--err:#c0262d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#171f35;--ink:#e8ecf7;--mut:#93a0bd;--line:#2a3554;--acc:#6d93ff;--onacc:#0e1424;--ok:#4fd1a5;--err:#ff7b80}}
+:root[data-theme="dark"]{--bg:#0e1424;--card:#171f35;--ink:#e8ecf7;--mut:#93a0bd;--line:#2a3554;--acc:#6d93ff;--onacc:#0e1424;--ok:#4fd1a5;--err:#ff7b80}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "Be Vietnam Pro",system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:40px 18px 64px}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.1;font-weight:800;letter-spacing:-.02em;margin:0 0 10px}
+.sub{color:var(--mut);margin:0 0 28px;max-width:56ch}
+#drop{display:block;border:2px dashed var(--line);border-radius:14px;padding:38px 18px;text-align:center;background:var(--card);cursor:pointer;transition:border-color .15s,background .15s}
+#drop.on,#drop:hover,#drop:focus-within{border-color:var(--acc)}
+#drop b{font-weight:600;color:var(--acc)}
+#drop small{display:block;color:var(--mut);margin-top:6px}
+#f{position:absolute;opacity:0;pointer-events:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+.card h2{font-size:15px;font-weight:600;margin:0 0 10px;color:var(--mut)}
+.file{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);word-break:break-all}
+.file:last-child{border:0}.file span:last-child{color:var(--mut);white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{cursor:pointer}
+.chips input{position:absolute;opacity:0}
+.chips span{display:inline-block;padding:9px 18px;border:1.5px solid var(--line);border-radius:999px;font-weight:600;min-width:64px;text-align:center}
+.chips input:checked+span{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.chips input:focus-visible+span{outline:3px solid var(--acc);outline-offset:2px}
+button{font:600 16px "Be Vietnam Pro",system-ui,sans-serif;background:var(--acc);color:var(--onacc);border:0;border-radius:10px;padding:13px 26px;cursor:pointer;margin-top:16px}
+button:disabled{opacity:.5;cursor:wait}
+button:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#st{margin-top:12px;color:var(--mut);min-height:1.5em}
+#st.err{color:var(--err)}
+.res a{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none;word-break:break-all}
+.res a b{color:var(--ok);white-space:nowrap}
+.note{color:var(--mut);font-size:14px;margin-top:26px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Đổi định dạng file ngay trên trình duyệt</h1>
+<p class="sub">Kéo file vào, chọn định dạng muốn đổi sang, tải về. File không bị tải lên máy chủ nào, mọi thứ chạy ngay trên máy bạn.</p>
+
+<label id="drop" for="f"><b>Chọn file</b> hoặc kéo thả vào đây<small>Ảnh, PDF, Word (.docx), văn bản, Excel/CSV/JSON, âm thanh, video</small></label>
+<input id="f" type="file" multiple>
+
+<section class="card" id="fc" hidden><h2>File đã chọn</h2><div id="fl"></div></section>
+<section class="card" id="oc" hidden><h2>Chuyển sang</h2><div class="chips" id="ch"></div>
+<button id="go">Chuyển đổi</button><div id="st" role="status"></div></section>
+<section class="card res" id="rc" hidden><h2>Kết quả, bấm để tải</h2><div id="rs"></div></section>
+
+<p class="note">Hỗ trợ: ảnh (PNG, JPG, WEBP, BMP, GIF, SVG) sang PNG/JPG/WEBP/PDF · PDF sang ảnh, TXT, DOC · DOCX sang TXT, DOC, HTML, PDF · TXT/MD sang PDF, DOC · XLSX/XLS/CSV/JSON đổi qua lại · MP4, MOV, WEBM, MP3, WAV, M4A, OGG, FLAC sang MP3 hoặc WAV. PDF sang DOC chỉ lấy phần chữ, không giữ bố cục. Video sang MP3 phụ thuộc trình duyệt giải mã được âm thanh của file, và file lớn sẽ tốn nhiều RAM. Chưa hỗ trợ đổi video sang video khác, hay các định dạng chuyên dụng như PSD, AI, RAW.</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const ext=f=>{let e=f.name.split('.').pop().toLowerCase();return e=='jpeg'?'jpg':e};
+const base=f=>f.name.replace(/\.[^.]+$/,'');
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const MIME={png:'image/png',jpg:'image/jpeg',webp:'image/webp'};
+const toBlob=(c,t,q)=>new Promise(r=>c.toBlob(r,t,q));
+const docBlob=h=>new Blob(['\ufeff<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>'+h+'</body></html>'],{type:'application/msword'});
+const paras=t=>t.split('\n').map(l=>'<p>'+esc(l)+'</p>').join('');
+const size=n=>n>1e6?(n/1e6).toFixed(1)+' MB':Math.max(1,Math.round(n/1e3))+' KB';
+try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}catch(e){}
+
+const G={
+ img:{e:['png','jpg','webp','bmp','gif','svg'],o:['png','jpg','webp','pdf']},
+ pdf:{e:['pdf'],o:['png','jpg','txt','doc']},
+ docx:{e:['docx'],o:['txt','doc','html','pdf']},
+ txt:{e:['txt','md'],o:['pdf','doc']},
+ av:{e:['mp4','mov','webm','mkv','m4v','mp3','wav','m4a','ogg','aac','flac'],o:['mp3','wav']},
+ tab:{e:['xlsx','xls','csv','json'],o:['xlsx','csv','json']}
+};
+const grp=f=>Object.keys(G).find(k=>G[k].e.includes(ext(f)));
+
+async function toCanvas(f,white){
+ const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(f)});
+ const c=document.createElement('canvas');c.width=img.naturalWidth||1000;c.height=img.naturalHeight||1000;
+ const x=c.getContext('2d');if(white){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}
+ x.drawImage(img,0,0,c.width,c.height);return c;
+}
+async function txt2pdf(t){
+ const {jsPDF}=window.jspdf,W=1240,H=1754,M=100,LH=36;
+ const p=new jsPDF({unit:'px',format:[W,H]});let c,x,y,first=1;
+ const nw=()=>{if(!first)p.addPage([W,H]);first=0;c=document.createElement('canvas');c.width=W;c.height=H;x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#000';x.font='26px sans-serif';y=M};
+ const fl=()=>p.addImage(c.toDataURL('image/jpeg',.85),'JPEG',0,0,W,H);
+ const br=()=>{if(y>H-M){fl();nw()}};
+ nw();
+ for(const para of t.split('\n')){let line='';
+  for(const w of para.split(' ')){const tt=line?line+' '+w:w;
+   if(x.measureText(tt).width>W-2*M&&line){x.fillText(line,M,y);y+=LH;br();line=w}else line=tt}
+  x.fillText(line,M,y);y+=LH;br()}
+ fl();return p.output('blob');
+}
+
+const R={
+ async img(f,o){
+  const b=base(f);
+  if(o=='pdf'){const c=await toCanvas(f,1),{jsPDF}=window.jspdf;
+   const p=new jsPDF({orientation:c.width>c.height?'l':'p',unit:'px',format:[c.width,c.height]});
+   p.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,c.width,c.height);return[[b+'.pdf',p.output('blob')]]}
+  return[[b+'.'+o,await toBlob(await toCanvas(f,o=='jpg'),MIME[o],.92)]];
+ },
+ async pdf(f,o){
+  const d=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,out=[],tx=[],b=base(f);
+  for(let n=1;n<=d.numPages;n++){
+   const pg=await d.getPage(n);$('#st').textContent=`Đang xử lý trang ${n}/${d.numPages}...`;
+   if(MIME[o]){const v=pg.getViewport({scale:2}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+    await pg.render({canvasContext:x,viewport:v}).promise;out.push([`${b}-${n}.${o}`,await toBlob(c,MIME[o],.92)])}
+   else{const t=await pg.getTextContent();tx.push(t.items.map(i=>i.str+(i.hasEOL?'\n':'')).join(''))}
+  }
+  if(MIME[o])return out;
+  const t=tx.join('\n\n');
+  return[[b+'.'+o,o=='txt'?new Blob([t],{type:'text/plain'}):docBlob(paras(t))]];
+ },
+ async docx(f,o){
+  const b=base(f),ab=await f.arrayBuffer();
+  if(o=='txt'||o=='pdf'){const t=(await mammoth.extractRawText({arrayBuffer:ab})).value;
+   return[[b+'.'+o,o=='txt'?new Blob([t],{type:'text/plain'}):await txt2pdf(t)]]}
+  const h=(await mammoth.convertToHtml({arrayBuffer:ab})).value;
+  return[[b+'.'+o,o=='html'?new Blob(['<meta charset="utf-8">'+h],{type:'text/html'}):docBlob(h)]];
+ },
+ async txt(f,o){const t=await f.text();return[[base(f)+'.'+o,o=='pdf'?await txt2pdf(t):docBlob(paras(t))]]},
+ async av(f,o){
+  const ac=new(window.AudioContext||window.webkitAudioContext)();
+  const buf=await ac.decodeAudioData(await f.arrayBuffer());
+  const ch=Math.min(buf.numberOfChannels,2),sr=buf.sampleRate,n=buf.length,b=base(f);
+  const d=[...Array(ch)].map((_,i)=>{const a=buf.getChannelData(i),s=new Int16Array(n);
+   for(let j=0;j<n;j++){const v=Math.max(-1,Math.min(1,a[j]));s[j]=v<0?v*32768:v*32767}return s});
+  if(o=='mp3'){const e=new lamejs.Mp3Encoder(ch,sr,128),parts=[];
+   for(let i=0;i<n;i+=1152){const l=d[0].subarray(i,i+1152),k=ch>1?e.encodeBuffer(l,d[1].subarray(i,i+1152)):e.encodeBuffer(l);if(k.length)parts.push(k)}
+   parts.push(e.flush());return[[b+'.mp3',new Blob(parts,{type:'audio/mpeg'})]]}
+  const len=n*ch*2,v=new DataView(new ArrayBuffer(44+len)),w=(p,s)=>[...s].forEach((c,i)=>v.setUint8(p+i,c.charCodeAt(0)));
+  w(0,'RIFF');v.setUint32(4,36+len,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*ch*2,true);v.setUint16(32,ch*2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,len,true);
+  let p=44;for(let i=0;i<n;i++)for(let c=0;c<ch;c++){v.setInt16(p,d[c][i],true);p+=2}
+  return[[b+'.wav',new Blob([v],{type:'audio/wav'})]];
+ },
+ async tab(f,o){
+  const b=base(f),e=ext(f);let wb;
+  if(e=='json'){const j=JSON.parse(await f.text());wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Array.isArray(j)?j:[j]),'Sheet1')}
+  else wb=e=='csv'?XLSX.read(await f.text(),{type:'string'}):XLSX.read(await f.arrayBuffer(),{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  if(o=='xlsx')return[[b+'.xlsx',new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})])]];
+  if(o=='csv')return[[b+'.csv',new Blob(['\ufeff'+XLSX.utils.sheet_to_csv(ws)],{type:'text/csv'})]];
+  return[[b+'.json',new Blob([JSON.stringify(XLSX.utils.sheet_to_json(ws),null,2)],{type:'application/json'})]];
+ }
+};
+
+let files=[],kind=null;
+function pick(list){
+  files=[...list];kind=files.length?grp(files[0]):null;
+  $('#rc').hidden=true;$('#st').textContent='';$('#st').className='';
+  $('#fc').hidden=!files.length;
+  $('#fl').innerHTML=files.map(f=>`<div class="file"><span>${esc(f.name)}</span><span>${size(f.size)}</span></div>`).join('');
+  if(files.length&&!kind){$('#oc').hidden=true;msg(`Chưa hỗ trợ định dạng .${ext(files[0])}. Xem danh sách hỗ trợ ở cuối trang.`,1);$('#oc').hidden=false;$('#ch').innerHTML='';$('#go').hidden=true;return}
+  $('#go').hidden=false;$('#oc').hidden=!files.length;
+  if(!files.length)return;
+  const opts=G[kind].o.filter(o=>o!=ext(files[0]));
+  $('#ch').innerHTML=opts.map((o,i)=>`<label><input type="radio" name="o" value="${o}"${i?'':' checked'}><span>${o.toUpperCase()}</span></label>`).join('');
+}
+const msg=(t,e)=>{$('#st').textContent=t;$('#st').className=e?'err':''};
+$('#f').onchange=e=>pick(e.target.files);
+const dz=$('#drop');
+['dragenter','dragover'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.add('on')}));
+['dragleave','drop'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.remove('on')}));
+dz.addEventListener('drop',e=>pick(e.dataTransfer.files));
+
+$('#go').onclick=async()=>{
+  const o=(document.querySelector('input[name=o]:checked')||{}).value;if(!o)return;
+  const btn=$('#go');btn.disabled=true;$('#rs').innerHTML='';$('#rc').hidden=true;
+  let done=0;
+  for(const f of files){
+    if(grp(f)!=kind){msg(`Bỏ qua ${f.name}: khác loại với file đầu tiên.`,1);continue}
+    try{
+      msg(`Đang chuyển ${f.name}...`);
+      const res=await R[kind](f,o);
+      for(const [name,blob] of res){
+        const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+        a.innerHTML=`<span>${esc(name)}</span><b>${size(blob.size)}</b>`;$('#rs').appendChild(a);
+      }
+      done++;$('#rc').hidden=false;
+    }catch(err){console.error(err);msg(`Không chuyển được ${f.name}. File có thể bị lỗi, được khóa mật khẩu, hoặc trình duyệt không giải mã được định dạng này.`,1)}
+  }
+  if(done)msg(`Xong ${done}/${files.length} file.`);
+  btn.disabled=false;
+};
+</script>
+</body>
+</html>

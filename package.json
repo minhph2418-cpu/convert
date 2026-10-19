@@ -1,0 +1,9 @@
+{
+  "name": "doi-dinh-dang",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Công cụ đổi định dạng file chạy hoàn toàn trên trình duyệt",
+  "scripts": {
+    "dev": "npx serve ."
+  }
+}
